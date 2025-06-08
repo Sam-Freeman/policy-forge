@@ -22,6 +22,7 @@ class EnrichedIntent(BaseModel):
     requirements: List[str]
 
 class RefinementRequest(BaseModel):
+    public: PublicPolicy
     moderator: ModeratorPolicy
     machine: MachinePolicy
     examples: List[SyntheticExample]

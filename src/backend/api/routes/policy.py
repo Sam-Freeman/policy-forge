@@ -26,7 +26,7 @@ def generate_policies(request: GenerateRequest):
 def refine(ref: RefinementRequest):
     try:
         refined_public, refined_moderator, refined_machine = refiner.refine_policies(
-            ref.moderator, ref.machine, ref.examples
+            ref.public, ref.moderator, ref.machine, ref.examples
         )
         response = PolicyResponse(
             public=refined_public,
@@ -35,6 +35,7 @@ def refine(ref: RefinementRequest):
         )
         return response
     except Exception as e:
+        print("Error refining policies: ", e)
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/preview")
