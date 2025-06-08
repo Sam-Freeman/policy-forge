@@ -9,9 +9,11 @@ from policy_forge.schema import (
 
 
 class InitialIntent(BaseModel):
-    platform: str
-    goal: str
+    platform_type: str
     industry: str
+    user_behavior: str
+    real_world_concerns: str
+    moderation_style: str
     additional_context: Optional[str] = None
 
 class EnrichedIntent(BaseModel):
