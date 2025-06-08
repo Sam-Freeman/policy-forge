@@ -12,9 +12,10 @@ router = APIRouter(prefix="/examples", tags=["examples"])
 def generate_synthetic_examples(request: ExampleRequest):
     try:
         examples = example_gen.generate_examples(request.policy)
-        response = ExampleResponse(examples=examples)
+        response = ExampleResponse(examples=examples.examples)
         return response
     except Exception as e:
+        print("Error generating examples: ", e)
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/review")
