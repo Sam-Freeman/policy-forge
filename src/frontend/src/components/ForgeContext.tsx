@@ -37,13 +37,17 @@ interface ForgeContextType {
   setIsLoading: (b: boolean) => void
   error: string | null
   setError: (e: string | null) => void
-  refineLoading: boolean
-  setRefineLoading: (b: boolean) => void
   refineError: string | null
   setRefineError: (e: string | null) => void
   submitIntent: (data: any) => Promise<void>
   generateExamples: () => Promise<void>
   refinePoliciesAction: () => Promise<void>
+  updatePolicyField: (
+    which: 'public' | 'moderator' | 'machine',
+    field: string,
+    value: string | string[]
+  ) => void
+  nextStep: () => void
 }
 
 const ForgeContext = createContext<ForgeContextType | undefined>(undefined)
@@ -56,7 +60,6 @@ export function ForgeProvider({ children }: { children: React.ReactNode }) {
   const [refinedPolicies, setRefinedPolicies] = useState<any | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [refineLoading, setRefineLoading] = useState(false)
   const [refineError, setRefineError] = useState<string | null>(null)
 
   const submitIntent = async (data: any) => {
@@ -78,7 +81,7 @@ export function ForgeProvider({ children }: { children: React.ReactNode }) {
       if (!policyResponse.ok) throw new Error('Failed to generate policies')
       const policyData = await policyResponse.json()
       setPolicies(policyData)
-      setStep(1)
+      nextStep()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
@@ -100,7 +103,7 @@ export function ForgeProvider({ children }: { children: React.ReactNode }) {
       const data = await response.json()
       setExamples(data.examples)
       setReviewedExamples(data.examples)
-      setStep(2)
+      nextStep()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
@@ -110,9 +113,8 @@ export function ForgeProvider({ children }: { children: React.ReactNode }) {
 
   const refinePoliciesAction = async () => {
     if (!policies || !reviewedExamples) return
-    setRefineLoading(true)
+    setIsLoading(true)
     setRefineError(null)
-    setStep(3)
     try {
       const response = await apiFetch('/api/policy/refine', {
         method: 'POST',
@@ -122,18 +124,47 @@ export function ForgeProvider({ children }: { children: React.ReactNode }) {
       if (!response.ok) throw new Error('Failed to refine policies')
       const data = await response.json()
       setRefinedPolicies(data)
+      nextStep()
     } catch (err) {
       setRefineError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
-      setRefineLoading(false)
+      setIsLoading(false)
     }
+  }
+
+  const updatePolicyField = (
+    which: 'public' | 'moderator' | 'machine',
+    field: string,
+    value: string | string[]
+  ) => {
+    if (refinedPolicies) {
+      setRefinedPolicies((prev: any) => ({
+        ...prev,
+        [which]: {
+          ...prev[which],
+          [field]: value,
+        },
+      }))
+    } else if (policies) {
+      setPolicies((prev: any) => ({
+        ...prev,
+        [which]: {
+          ...prev[which],
+          [field]: value,
+        },
+      }))
+    }
+  }
+
+  const nextStep = () => {
+    setStep(step + 1)
   }
 
   return (
     <ForgeContext.Provider value={{
       step, setStep, policies, setPolicies, examples, setExamples, reviewedExamples, setReviewedExamples, refinedPolicies, setRefinedPolicies,
-      isLoading, setIsLoading, error, setError, refineLoading, setRefineLoading, refineError, setRefineError,
-      submitIntent, generateExamples, refinePoliciesAction
+      isLoading, setIsLoading, error, setError, refineError, setRefineError,
+      submitIntent, generateExamples, refinePoliciesAction, updatePolicyField, nextStep
     }}>
       {children}
     </ForgeContext.Provider>

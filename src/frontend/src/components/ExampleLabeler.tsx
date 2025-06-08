@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Paper, Title, Loader, Stack, Text, SegmentedControl, Group } from '@mantine/core'
+import { Paper, Stack, Text, SegmentedControl, Group } from '@mantine/core'
 import { useForge } from './ForgeContext'
 
 const LABELS = [
@@ -8,8 +8,8 @@ const LABELS = [
   { label: 'Non-violating', value: 'non-violation', color: 'green' },
 ]
 
-export function ExampleGenerator() {
-  const { policies, examples, reviewedExamples, setReviewedExamples, isLoading } = useForge()
+export function ExampleLabeler() {
+  const { examples, reviewedExamples, setReviewedExamples } = useForge()
 
   // Keep local labels state in sync with reviewedExamples
   useEffect(() => {
@@ -32,7 +32,6 @@ export function ExampleGenerator() {
   return (
     <Paper p="xl" radius="md" withBorder shadow="sm">
       <Stack gap="md">
-        {isLoading && <Loader color="mint" />}
         {reviewedExamples && (
           <Stack gap="lg" mt="md">
             {reviewedExamples.length === 0 && <Text>No examples generated yet.</Text>}
@@ -50,9 +49,6 @@ export function ExampleGenerator() {
                         data={LABELS.map(l => ({ label: l.label, value: l.value }))}
                         color={color as any}
                       />
-                      <Text size="sm" c={color}>
-                        {LABELS.find(l => l.value === selected)?.label}
-                      </Text>
                     </Group>
                   </Stack>
                 </Paper>

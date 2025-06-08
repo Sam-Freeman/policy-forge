@@ -19,7 +19,6 @@ export function IntentForm() {
   
   return (
     <Paper p="xl" radius="md" withBorder shadow="sm">
-      <Title order={2} mb="md" c="mint.7">Define Your Policy Intent</Title>
       <form onSubmit={form.onSubmit(submitIntent)}>
         <Stack gap="md">
           <Select

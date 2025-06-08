@@ -1,34 +1,21 @@
-import { Container, Stack, Title, Alert, Box, Stepper, Grid, rem, Paper, Button } from '@mantine/core'
+import { Container, Stack, Title, Alert, Box, Stepper, Grid, rem, Paper, Button, Loader, Overlay } from '@mantine/core'
 import { ForgeProvider, useForge } from './ForgeContext'
 import { IntentForm } from './IntentForm'
 import { PolicyDisplay } from './PolicyDisplay'
-import { ExampleGenerator } from './ExampleGenerator'
-
-function RefinePolicies() {
-  const { refinedPolicies, refineLoading, refineError } = useForge()
-  return (
-    <Box>
-      {refineLoading && <Alert color="mint" variant="light" mb="md">Refining policies...</Alert>}
-      {refineError && <Alert color="red" title="Error" variant="filled" mb="md">{refineError}</Alert>}
-      {refinedPolicies && (
-        <Box mt="xl">
-          <PolicyDisplay />
-        </Box>
-      )}
-    </Box>
-  )
-}
+import { ExampleLabeler } from './ExampleLabeler'
+import { DownloadPolicies } from './DownloadPolicies'
 
 function ForgeSteps() {
   const {
-    step, error, isLoading, generateExamples, refinePoliciesAction
+    step, error, isLoading, generateExamples, refinePoliciesAction, nextStep
   } = useForge()
 
   const steps = [
     { label: 'Define Intent', description: 'Describe your policy scenario' },
     { label: 'Review Policies', description: 'View and analyse generated policies' },
     { label: 'Label Examples', description: 'Label synthetic examples' },
-    { label: 'Refine Policies', description: 'Refine policies using reviewed examples' },
+    { label: 'Review Refined Policies', description: 'View refined policies that were updated based on your feedback' },
+    { label: 'Download Policies', description: 'Download your policies' },
   ]
 
   return (
@@ -46,7 +33,25 @@ function ForgeSteps() {
                 </Stepper>
               </Stack>
             </Grid.Col>
-            <Grid.Col span={{ base: 12, md: 8 }} style={{ background: '#fff', padding: rem(40) }}>
+            <Grid.Col span={{ base: 12, md: 8 }} style={{ background: '#fff', padding: rem(40), position: 'relative' }}>
+              {isLoading && (
+                <>
+                  <Overlay blur={2} opacity={0.3} />
+                  <Box
+                    pos="absolute"
+                    top="50%"
+                    left="50%"
+                    style={{
+                      transform: 'translate(-50%, -50%)',
+                      zIndex: 1000,
+                    }}
+                  >
+                    <Stack align="center" gap="md">
+                      <Loader size="xl" color="mint" />
+                    </Stack>
+                  </Box>
+                </>
+              )}
               <Stack>
                 <Title order={1} ta="left" c="mint.7" mb="md" style={{ fontWeight: 600, letterSpacing: 1 }}>
                   {steps[step].label}
@@ -71,14 +76,22 @@ function ForgeSteps() {
                 )}
                 {step === 2 && (
                   <>
-                    <ExampleGenerator />
+                    <ExampleLabeler />
                     <Button mt="xl" color="mint" onClick={refinePoliciesAction}>
                       Refine Policies
                     </Button>
                   </>
                 )}
                 {step === 3 && (
-                  <RefinePolicies />
+                  <>
+                    <PolicyDisplay />
+                    <Button mt="xl" color="mint" onClick={nextStep}>
+                      Continue
+                    </Button>
+                  </>
+                )}
+                {step === 4 && (
+                  <DownloadPolicies />
                 )}
               </Stack>
             </Grid.Col>
