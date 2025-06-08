@@ -29,7 +29,7 @@ interface Policy {
 const steps = [
   { label: 'Define Intent', description: 'Describe your policy scenario' },
   { label: 'Review Policies', description: 'View and analyze generated policies' },
-  { label: 'Generate Examples', description: 'Create and review synthetic examples' },
+  { label: 'Label Examples', description: 'Label synthetic examples' },
 ]
 
 export function Forge() {
