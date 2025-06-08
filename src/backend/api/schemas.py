@@ -21,11 +21,22 @@ class EnrichedIntent(BaseModel):
     context: dict
     requirements: List[str]
 
+class MachinePolicyRequest(BaseModel):
+    intent: str
+
+class MachinePolicyResponse(BaseModel):
+    machine: MachinePolicy
+
 class RefinementRequest(BaseModel):
+    machine: MachinePolicy
+    reviewed_examples: List[SyntheticExample]
+
+class DerivedPoliciesRequest(BaseModel):
+    machine: MachinePolicy
+
+class DerivedPoliciesResponse(BaseModel):
     public: PublicPolicy
     moderator: ModeratorPolicy
-    machine: MachinePolicy
-    examples: List[SyntheticExample]
 
 class ExampleRequest(BaseModel):
     policy: MachinePolicy
@@ -40,6 +51,7 @@ class ReviewedExample(SyntheticExample):
 class ExamplesReviewRequest(BaseModel):
     examples: List[ReviewedExample]
 
+# Keep these for backward compatibility
 class GenerateRequest(BaseModel):
     intent: str
 

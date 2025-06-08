@@ -7,14 +7,16 @@ import { DownloadPolicies } from './DownloadPolicies'
 
 function ForgeSteps() {
   const {
-    step, error, isLoading, generateExamples, refinePoliciesAction, nextStep
+    step, error, isLoading, generateExamples, refineMachinePolicy, generateDerivedPolicies, nextStep,
+    machinePolicy, publicPolicy, moderatorPolicy
   } = useForge()
 
   const steps = [
     { label: 'Define Intent', description: 'Describe your policy scenario' },
-    { label: 'Review Policies', description: 'View and analyse generated policies' },
+    { label: 'Review Machine Policy', description: 'Review and refine the machine-readable policy' },
     { label: 'Label Examples', description: 'Label synthetic examples' },
-    { label: 'Review Refined Policies', description: 'View refined policies that were updated based on your feedback' },
+    { label: 'Review Refined Machine Policy', description: 'Review the refined machine policy' },
+    { label: 'Review Derived Policies', description: 'Review public policy and moderator guidance' },
     { label: 'Download Policies', description: 'Download your policies' },
   ]
 
@@ -66,9 +68,15 @@ function ForgeSteps() {
                     <IntentForm />
                   </>
                 )}
-                {step === 1 && (
+                {step === 1 && machinePolicy && (
                   <>
-                    <PolicyDisplay />
+                    <PolicyDisplay
+                      policies={[{
+                        policy: machinePolicy,
+                        type: 'machine',
+                        displayName: 'Machine Policy'
+                      }]}
+                    />
                     <Button mt="xl" color="mint" onClick={generateExamples}>
                       Continue
                     </Button>
@@ -77,20 +85,56 @@ function ForgeSteps() {
                 {step === 2 && (
                   <>
                     <ExampleLabeler />
-                    <Button mt="xl" color="mint" onClick={refinePoliciesAction}>
-                      Refine Policies
+                    <Button mt="xl" color="mint" onClick={refineMachinePolicy}>
+                      Refine Machine Policy
                     </Button>
                   </>
                 )}
-                {step === 3 && (
+                {step === 3 && machinePolicy && (
                   <>
-                    <PolicyDisplay />
+                    <PolicyDisplay
+                      policies={[{
+                        policy: machinePolicy,
+                        type: 'machine',
+                        displayName: 'Machine Policy'
+                      }]}
+                    />
+                    <Button mt="xl" color="mint" onClick={generateDerivedPolicies}>
+                      Generate Derived Policies
+                    </Button>
+                  </>
+                )}
+                {step === 4 && machinePolicy && publicPolicy && moderatorPolicy && (
+                  <>
+                    <Stack>
+                      <Title order={2}>Review Policies</Title>
+                      <PolicyDisplay
+                        policies={[
+                          {
+                            policy: publicPolicy,
+                            type: 'public',
+                            displayName: 'Public Policy'
+                          },
+                          {
+                            policy: moderatorPolicy,
+                            type: 'moderator',
+                            displayName: 'Moderator Guidance'
+                          },
+                          {
+                            policy: machinePolicy,
+                            type: 'machine',
+                            displayName: 'Machine Policy'
+                          }
+                        ]}
+                        defaultTab="public"
+                      />
+                    </Stack>
                     <Button mt="xl" color="mint" onClick={nextStep}>
                       Continue
                     </Button>
                   </>
                 )}
-                {step === 4 && (
+                {step === 5 && (
                   <DownloadPolicies />
                 )}
               </Stack>

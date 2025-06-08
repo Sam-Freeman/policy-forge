@@ -19,16 +19,13 @@ def new():
     builder.ask_questions()
     intent = builder.build_intent()
 
-    typer.echo("✍️ Generating policy...")
-    public, moderator, machine = policy_writer.generate_policy(intent)
-    typer.echo("🧍‍♂️ Moderator policy:")
-    typer.echo(moderator)
+    typer.echo("✍️ Generating initial machine policy...")
+    machine = policy_writer.generate_initial_policy(intent)
     typer.echo("🤖 Machine policy:")
     typer.echo(machine)
-    typer.echo("📢 Public policy:")
-    typer.echo(public)
 
-    typer.confirm("Use these policies?", default=True)
+    if not typer.confirm("Review and refine this machine policy?", default=True):
+        return
 
     typer.echo("🔬 Generating examples...")
     examples = example_gen.generate_examples(machine)
@@ -37,21 +34,26 @@ def new():
     typer.echo("🧑‍⚖️ Review the examples")
     reviewed = reviewer.review_examples(examples)
 
-    typer.echo("🔁 Refining the policy...")
-    public_refined, moderator_refined, machine_refined = refiner.refine_policies(
-        public,
-        moderator,
-        machine,
-        reviewed,
-    )
-
-    typer.echo("\n✅ Final Policy:")
-    typer.echo(moderator_refined)
+    typer.echo("🔁 Refining the machine policy...")
+    machine_refined = refiner.refine_machine_policy(machine, reviewed)
+    typer.echo("🤖 Refined machine policy:")
     typer.echo(machine_refined)
+
+    if not typer.confirm("Generate public and moderator policies from this refined machine policy?", default=True):
+        return
+
+    typer.echo("📝 Generating public and moderator policies...")
+    public, moderator = policy_writer.generate_derived_policies(machine_refined)
+    
+    typer.echo("🧍‍♂️ Moderator policy:")
+    typer.echo(moderator)
     typer.echo("📢 Public policy:")
-    typer.echo(public_refined)
+    typer.echo(public)
+
+    if not typer.confirm("Save all policies?", default=True):
+        return
 
     typer.echo("💾 Saving policies to markdown...")
-    writer.save_policies_to_markdown(public_refined, moderator_refined, machine_refined)
+    writer.save_policies_to_markdown(public, moderator, machine_refined)
 
-    typer.echo("🎉 Done! Your policy has been saved to output/")
+    typer.echo("🎉 Done! Your policies have been saved to output/")

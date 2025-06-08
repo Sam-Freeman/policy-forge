@@ -14,7 +14,7 @@ Built for clarity, consistency, and real-world enforcement.
 - 🔍 Guided intent definition via lightweight Q&A
 - 📝 Generates 3 policy types:
   - **Public-facing policy** — for your Help Center or ToS
-  - **Moderator policy** — for human review teams
+  - **Moderator guidance** — for human review teams
   - **Machine-readable policy** — structured and atomic for use with classifiers or LLMs
 - 🧪 Synthetic data generation with labeled examples
 - ✅ Interactive reviewer to approve or revise outputs

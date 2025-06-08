@@ -86,7 +86,7 @@ export function IntentForm() {
             disabled={isDisabled}
             {...form.getInputProps('additional_context')}
           />
-          <Button type="submit" loading={isLoading} size="md" mt="md">
+          <Button type="submit" disabled={isDisabled} size="md" mt="md">
             Generate Policies
           </Button>
         </Stack>

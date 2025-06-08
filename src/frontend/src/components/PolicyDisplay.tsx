@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Paper, Title, Text, Tabs, Stack, List, Button, Group, Box, TextInput, ActionIcon } from '@mantine/core'
+import { Paper, Title, Text, Stack, List, Button, Group, Box, TextInput, ActionIcon, Tabs } from '@mantine/core'
 import { useForge } from './ForgeContext'
+import type { Policy } from './ForgeContext'
 import { RichTextEditor } from '@mantine/tiptap'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
@@ -20,6 +21,8 @@ const POLICY_FIELDS: Record<string, { label: string; type: 'markdown' | 'list' }
   edge_case_guidance: { label: 'Edge Case Guidance', type: 'list' },
 }
 
+type PolicyType = 'public' | 'moderator' | 'machine'
+
 function EditableField<T extends string | string[]>({
   which,
   field,
@@ -27,7 +30,7 @@ function EditableField<T extends string | string[]>({
   type,
   onSave,
 }: {
-  which: 'public' | 'moderator' | 'machine'
+  which: PolicyType
   field: string
   value: T
   type: 'markdown' | 'list'
@@ -162,60 +165,80 @@ function EditableField<T extends string | string[]>({
   )
 }
 
-export function PolicyDisplay() {
-  const { policies, refinedPolicies, updatePolicyField } = useForge()
-  if (!policies && !refinedPolicies) return null
-  const current = refinedPolicies || policies
-  const tabs: Array<{ key: 'public' | 'moderator' | 'machine'; label: string }> = [
-    { key: 'public', label: 'Public Policy' },
-    { key: 'moderator', label: 'Moderator Policy' },
-    { key: 'machine', label: 'Machine Policy' },
-  ]
+interface PolicyDisplayProps {
+  policies: Array<{
+    policy: Policy
+    type: PolicyType
+    displayName: string
+  }>
+  defaultTab?: PolicyType
+}
+
+function PolicyContent({ policy, type }: { policy: Policy; type: PolicyType }) {
+  const { updatePolicyField } = useForge()
+  
+  return (
+    <Stack gap="md">
+      <Title order={3}>{policy.name}</Title>
+      {Object.entries(policy)
+        .filter(([field]) => POLICY_FIELDS[field])
+        .map(([field, value]) => {
+          const fieldType = POLICY_FIELDS[field].type;
+          if (fieldType === 'markdown') {
+            return (
+              <EditableField<string>
+                key={field}
+                which={type}
+                field={field}
+                value={String(value ?? '')}
+                type={fieldType}
+                onSave={(val) => updatePolicyField(type, field, val)}
+              />
+            )
+          } else {
+            return (
+              <EditableField<string[]>
+                key={field}
+                which={type}
+                field={field}
+                value={value as string[]}
+                type={fieldType}
+                onSave={(val) => updatePolicyField(type, field, val)}
+              />
+            )
+          }
+        })}
+    </Stack>
+  )
+}
+
+export function PolicyDisplay({ policies, defaultTab }: PolicyDisplayProps) {
+  if (!policies.length) return null
+
+  // If there's only one policy, don't show tabs
+  if (policies.length === 1) {
+    return (
+      <Paper p="xl" radius="md" withBorder shadow="sm">
+        <PolicyContent policy={policies[0].policy} type={policies[0].type} />
+      </Paper>
+    )
+  }
+
   return (
     <Paper p="xl" radius="md" withBorder shadow="sm">
-      <Tabs defaultValue="public">
+      <Tabs defaultValue={defaultTab || policies[0].type}>
         <Tabs.List>
-          {tabs.map((tab) => (
-            <Tabs.Tab key={tab.key} value={tab.key}>{tab.label}</Tabs.Tab>
+          {policies.map(({ type, displayName }) => (
+            <Tabs.Tab key={type} value={type}>
+              {displayName}
+            </Tabs.Tab>
           ))}
         </Tabs.List>
-        <Stack gap="md" mt="md">
-          {tabs.map((tab) => (
-            <Tabs.Panel key={tab.key} value={tab.key}>
-              <Stack gap="md">
-                <Title order={3}>{String(current[tab.key].name)}</Title>
-                {Object.entries(current[tab.key])
-                  .filter(([field]) => POLICY_FIELDS[field])
-                  .map(([field, value]) => {
-                    const type = POLICY_FIELDS[field].type;
-                    if (type === 'markdown') {
-                      return (
-                        <EditableField<string>
-                          key={field}
-                          which={tab.key}
-                          field={field}
-                          value={String(value ?? '')}
-                          type={type}
-                          onSave={(val) => updatePolicyField(tab.key, field, val)}
-                        />
-                      );
-                    } else {
-                      return (
-                        <EditableField<string[]>
-                          key={field}
-                          which={tab.key}
-                          field={field}
-                          value={Array.isArray(value) ? (value as string[]) : []}
-                          type={type}
-                          onSave={(val: string[]) => updatePolicyField(tab.key, field, val)}
-                        />
-                      );
-                    }
-                  })}
-              </Stack>
-            </Tabs.Panel>
-          ))}
-        </Stack>
+        {policies.map(({ policy, type }) => (
+          <Tabs.Panel key={type} value={type} pt="md">
+            <PolicyContent policy={policy} type={type} />
+          </Tabs.Panel>
+        ))}
       </Tabs>
     </Paper>
   )

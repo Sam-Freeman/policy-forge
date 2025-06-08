@@ -5,9 +5,41 @@ from backend.api.schemas import (
     PolicyResponse,
     RefinementRequest,
     PolicyPreviewResponse,
+    MachinePolicyResponse,
 )
 
 router = APIRouter(prefix="/policy", tags=["policy"])
+
+@router.post("/generate/initial")
+def generate_initial_policy(request: GenerateRequest):
+    try:
+        machine = policy_writer.generate_initial_policy(request.intent)
+        response = MachinePolicyResponse(machine=machine)
+        return response
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/generate/derived")
+def generate_derived_policies(request: MachinePolicyResponse):
+    try:
+        public, moderator = policy_writer.generate_derived_policies(request.machine)
+        response = PolicyResponse(
+            public=public,
+            moderator=moderator,
+            machine=request.machine,
+        )
+        return response
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/refine")
+def refine_policy(request: RefinementRequest):
+    try:
+        machine_refined = refiner.refine_machine_policy(request.machine, request.reviewed_examples)
+        response = MachinePolicyResponse(machine=machine_refined)
+        return response
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/generate")
 def generate_policies(request: GenerateRequest):
@@ -20,22 +52,6 @@ def generate_policies(request: GenerateRequest):
         )
         return response
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@router.post("/refine")
-def refine(ref: RefinementRequest):
-    try:
-        refined_public, refined_moderator, refined_machine = refiner.refine_policies(
-            ref.public, ref.moderator, ref.machine, ref.examples
-        )
-        response = PolicyResponse(
-            public=refined_public,
-            moderator=refined_moderator,
-            machine=refined_machine,
-        )
-        return response
-    except Exception as e:
-        print("Error refining policies: ", e)
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/preview")

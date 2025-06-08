@@ -1,41 +1,36 @@
-import { Box, Title, Button, Stack, Text } from '@mantine/core'
+import { Box, Button, Stack, Title, Text } from '@mantine/core'
 import { useForge } from './ForgeContext'
 import JSZip from 'jszip'
 
-function renderMarkdownSection(title: string, fields: Record<string, any>) {
-  let md = `# ${title}\n\n`;
-  for (const [key, value] of Object.entries(fields)) {
-    if (key === 'name') continue;
-    if (typeof value === 'string' && value.trim()) {
-      md += `## ${key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ')}\n\n${value}\n\n`;
-    } else if (Array.isArray(value) && value.length > 0) {
-      md += `## ${key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ')}\n`;
-      for (const item of value) {
-        md += `- ${item}\n`;
+function renderMarkdownSection(title: string, policy: any) {
+  if (!policy) return ''
+  return `# ${title}\n\n${Object.entries(policy)
+    .filter(([key]) => key !== 'name')
+    .map(([key, value]) => {
+      if (Array.isArray(value)) {
+        return `## ${key}\n${value.map((v) => `- ${v}`).join('\n')}`
       }
-      md += '\n';
-    }
-  }
-  return md;
+      return `## ${key}\n${value}`
+    })
+    .join('\n\n')}`
 }
 
 export function DownloadPolicies() {
-  const { refinedPolicies, policies } = useForge()
-  const current = refinedPolicies || policies
-  if (!current) return null
+  const { machinePolicy, publicPolicy, moderatorPolicy } = useForge()
+  if (!machinePolicy || !publicPolicy || !moderatorPolicy) return null
 
   const handleDownload = async () => {
     const zip = new JSZip();
 
     // Create markdown files for each policy
-    const publicPolicy = renderMarkdownSection('Public Policy', current.public);
-    const moderatorPolicy = renderMarkdownSection('Moderator Policy', current.moderator);
-    const machinePolicy = renderMarkdownSection('Machine Policy', current.machine);
+    const publicPolicyMd = renderMarkdownSection('Public Policy', publicPolicy);
+    const moderatorPolicyMd = renderMarkdownSection('Moderator Guidance', moderatorPolicy);
+    const machinePolicyMd = renderMarkdownSection('Machine Policy', machinePolicy);
 
     // Add files to zip
-    zip.file('public-policy.md', publicPolicy);
-    zip.file('moderator-policy.md', moderatorPolicy);
-    zip.file('machine-policy.md', machinePolicy);
+    zip.file('public-policy.md', publicPolicyMd);
+    zip.file('moderator-policy.md', moderatorPolicyMd);
+    zip.file('machine-policy.md', machinePolicyMd);
 
     // Generate and download zip
     const content = await zip.generateAsync({ type: 'blob' });
