@@ -1,23 +1,10 @@
 import { TextInput, Select, Textarea, Button, Stack, Paper, Title } from '@mantine/core'
 import { useForm } from '@mantine/form'
+import { useForge } from './ForgeContext'
 
-interface IntentFormData {
-  platform_type: string
-  industry: string
-  user_behavior: string
-  real_world_concerns: string
-  moderation_style: string
-  additional_context: string
-}
-
-interface IntentFormProps {
-  onSubmit: (data: IntentFormData) => void
-  isLoading?: boolean
-  disabled?: boolean
-}
-
-export function IntentForm({ onSubmit, isLoading, disabled }: IntentFormProps) {
-  const form = useForm<IntentFormData>({
+export function IntentForm() {
+  const { submitIntent, isLoading, step } = useForge()
+  const form = useForm({
     initialValues: {
       platform_type: '',
       industry: '',
@@ -28,9 +15,12 @@ export function IntentForm({ onSubmit, isLoading, disabled }: IntentFormProps) {
     },
   })
 
+  const isDisabled = step > 0 || isLoading
+  
   return (
     <Paper p="xl" radius="md" withBorder shadow="sm">
-      <form onSubmit={form.onSubmit(onSubmit)}>
+      <Title order={2} mb="md" c="mint.7">Define Your Policy Intent</Title>
+      <form onSubmit={form.onSubmit(submitIntent)}>
         <Stack gap="md">
           <Select
             label="Platform Type"
@@ -43,10 +33,9 @@ export function IntentForm({ onSubmit, isLoading, disabled }: IntentFormProps) {
               'Other'
             ]}
             required
-            disabled={disabled}
+            disabled={isDisabled}
             {...form.getInputProps('platform_type')}
           />
-          
           <Select
             label="Industry"
             placeholder="Select industry"
@@ -59,28 +48,25 @@ export function IntentForm({ onSubmit, isLoading, disabled }: IntentFormProps) {
               'Other'
             ]}
             required
-            disabled={disabled}
+            disabled={isDisabled}
             {...form.getInputProps('industry')}
           />
-
           <Textarea
             label="Target Behavior"
             placeholder="Describe the behavior you want to moderate"
             required
             minRows={2}
-            disabled={disabled}
+            disabled={isDisabled}
             {...form.getInputProps('user_behavior')}
           />
-
           <Textarea
             label="Real-World Concerns"
             placeholder="Describe any real-world concerns or considerations"
             required
             minRows={2}
-            disabled={disabled}
+            disabled={isDisabled}
             {...form.getInputProps('real_world_concerns')}
           />
-
           <Select
             label="Moderation Style"
             placeholder="Select moderation approach"
@@ -91,18 +77,16 @@ export function IntentForm({ onSubmit, isLoading, disabled }: IntentFormProps) {
               'Context-aware'
             ]}
             required
-            disabled={disabled}
+            disabled={isDisabled}
             {...form.getInputProps('moderation_style')}
           />
-
           <Textarea
             label="Additional Context"
             placeholder="Any additional context or requirements"
             minRows={2}
-            disabled={disabled}
+            disabled={isDisabled}
             {...form.getInputProps('additional_context')}
           />
-
           <Button type="submit" loading={isLoading} size="md" mt="md">
             Generate Policies
           </Button>

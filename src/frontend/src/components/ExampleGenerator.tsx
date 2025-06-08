@@ -1,11 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { Paper, Title, Loader, Stack, Text, SegmentedControl, Group } from '@mantine/core'
-
-interface ExampleGeneratorProps {
-  policy: any
-  examples: any[] | null
-  isLoading: boolean
-}
+import { useForge } from './ForgeContext'
 
 const LABELS = [
   { label: 'Violating', value: 'violation', color: 'red' },
@@ -13,33 +8,36 @@ const LABELS = [
   { label: 'Non-violating', value: 'non-violation', color: 'green' },
 ]
 
-export function ExampleGenerator({ policy, examples, isLoading }: ExampleGeneratorProps) {
-  const [labels, setLabels] = useState<Record<number, string>>({})
+export function ExampleGenerator() {
+  const { policies, examples, reviewedExamples, setReviewedExamples, isLoading } = useForge()
 
-  // Set initial labels from API response
+  // Keep local labels state in sync with reviewedExamples
   useEffect(() => {
-    if (examples) {
-      const initialLabels: Record<number, string> = {}
-      examples.forEach((ex, idx) => {
-        initialLabels[idx] = ex.label
-      })
-      setLabels(initialLabels)
+    if (examples && reviewedExamples && reviewedExamples.length === examples.length) {
+      // nothing to do, already synced
+      return
     }
+    if (examples) {
+      setReviewedExamples(examples)
+    }
+    // eslint-disable-next-line
   }, [examples])
 
   const handleLabelChange = (idx: number, value: string) => {
-    setLabels((prev) => ({ ...prev, [idx]: value }))
+    if (!reviewedExamples) return
+    const updated = reviewedExamples.map((ex, i) => i === idx ? { ...ex, label: value } : ex)
+    setReviewedExamples(updated)
   }
 
   return (
     <Paper p="xl" radius="md" withBorder shadow="sm">
       <Stack gap="md">
         {isLoading && <Loader color="mint" />}
-        {examples && (
+        {reviewedExamples && (
           <Stack gap="lg" mt="md">
-            {examples.length === 0 && <Text>No examples generated yet.</Text>}
-            {examples.map((ex, idx) => {
-              const selected = labels[idx] || 'borderline'
+            {reviewedExamples.length === 0 && <Text>No examples generated yet.</Text>}
+            {reviewedExamples.map((ex, idx) => {
+              const selected = ex.label || 'borderline'
               const color = LABELS.find(l => l.value === selected)?.color || 'gray'
               return (
                 <Paper key={idx} p="md" radius="sm" withBorder>
