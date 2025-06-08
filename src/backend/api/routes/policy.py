@@ -1,24 +1,13 @@
 from fastapi import APIRouter, HTTPException
-from policy_forge import (
-    policy_writer,
-    example_gen,
-    refiner,
-)
+from policy_forge import policy_writer, refiner
 from backend.api.schemas import (
-    RefinementRequest,
     GenerateRequest,
     PolicyResponse,
-    ExampleRequest,
-    ExampleResponse,
+    RefinementRequest,
+    PolicyPreviewResponse,
 )
 
-router = APIRouter()
-
-
-@router.get("/health")
-def health_check():
-    return {"status": "ok"}
-
+router = APIRouter(prefix="/policy", tags=["policy"])
 
 @router.post("/generate")
 def generate_policies(request: GenerateRequest):
@@ -32,17 +21,6 @@ def generate_policies(request: GenerateRequest):
         return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/examples")
-def generate_synthetic_examples(request: ExampleRequest):
-    try:
-        examples = example_gen.generate_examples(request.policy)
-        response = ExampleResponse(examples=examples)
-        return response
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
 
 @router.post("/refine")
 def refine(ref: RefinementRequest):
@@ -58,3 +36,15 @@ def refine(ref: RefinementRequest):
         return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/preview")
+def preview_policies():
+    try:
+        # TODO: Implement policy preview generation logic
+        preview = PolicyPreviewResponse(
+            markdown="# Policy Preview\n\nThis is a sample markdown preview",
+            json={"sample": "json preview"}
+        )
+        return preview
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) 
